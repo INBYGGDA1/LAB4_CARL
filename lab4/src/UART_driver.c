@@ -379,16 +379,16 @@ void UART_reset()
     volatile uint32_t *GPIOSLR_pointer;
 
     // Array containing every UART base
-    volatile uint32_t base_arr[] = {UART_base_0, UART_base_1, UART_base_2, UART_base_3, UART_base_4, UART_base_5, UART_base_6, UART_base_7};
+    volatile uint32_t base_arr[8] = {UART_base_0, UART_base_1, UART_base_2, UART_base_3, UART_base_4, UART_base_5, UART_base_6, UART_base_7};
     // Array containing every UART port (A-Q)
-    volatile uint32_t port_arr[] = {GPIO_Port_A_base, GPIO_Port_B_base, GPIO_Port_C_base, GPIO_Port_D_base, GPIO_Port_E_base, GPIO_Port_F_base, GPIO_Port_G_base,
-                           GPIO_Port_H_base, GPIO_Port_J_base, GPIO_Port_K_base, GPIO_Port_L_base, GPIO_Port_M_base, GPIO_Port_N_base, GPIO_Port_P_base, GPIO_Port_Q_base};
+    volatile uint32_t port_arr[14] = {GPIO_Port_A_base, GPIO_Port_B_base, GPIO_Port_C_base, GPIO_Port_D_base, GPIO_Port_E_base, GPIO_Port_F_base, GPIO_Port_G_base, GPIO_Port_H_base, GPIO_Port_J_base, GPIO_Port_K_base, GPIO_Port_L_base, GPIO_Port_M_base, GPIO_Port_N_base, GPIO_Port_P_base};
+    //volatile uint32_t port_arr[15] = {GPIO_Port_A_base, GPIO_Port_B_base, GPIO_Port_C_base, GPIO_Port_D_base, GPIO_Port_E_base, GPIO_Port_F_base, GPIO_Port_G_base, GPIO_Port_H_base, GPIO_Port_J_base, GPIO_Port_K_base, GPIO_Port_L_base, GPIO_Port_M_base, GPIO_Port_N_base, GPIO_Port_P_base, GPIO_Port_Q_base};
     // Array containing the offset for all 30 UART registers
-    volatile uint32_t register_arr[] = {UARTDR, UARTRSR_ECR, UARTFR, UARTILPR, UARTIBRD, UARTFBRD, UARTLCRH, UARTCTL, UARTIFLS, UARTIM,
+    volatile uint32_t register_arr[30] = {UARTDR, UARTRSR_ECR, UARTFR, UARTILPR, UARTIBRD, UARTFBRD, UARTLCRH, UARTCTL, UARTIFLS, UARTIM,
                                UARTRIS, UARTMIS, UARTICR, UARTDMACTL, UART9BITADDR, UART9BITAMASK, UARTPP, UARTCC, UARTPeriphID4, UARTPeriphID5,
                                UARTPeriphID6, UARTPeriphID7, UARTPeriphID0, UARTPeriphID1, UARTPeriphID2, UARTPeriphID3, UARTPCellID0, UARTPCellID1, UARTPCellID2, UARTPCellID3};
     // Array containg the reset vector for all 30 UART registers
-    volatile uint32_t reset_arr[] = {0x00000000, 0x00000000, 0x00000090, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000300, 0x00000012, 0x00000000,
+    volatile uint32_t reset_arr[30] = {0x00000000, 0x00000000, 0x00000090, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000300, 0x00000012, 0x00000000,
                             0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x000000FF, 0x0000000F, 0x00000000, 0x00000060, 0x00000000,
                             0x00000000, 0x00000000, 0x00000011, 0x00000000, 0x00000018, 0x00000001, 0x0000000D, 0x000000F0, 0x00000005, 0x000000B1};
     //-----------------------------------------------------------------------------
@@ -402,6 +402,7 @@ void UART_reset()
     //-----------------------------------------------------------------------------
     // Using the respective reset vector to reset every UART register (for all UARTs)
     // Loop over every UART base since we need to reset all of them
+
     for(i = 0; i < 8; i++)
     {
         // Loop over every UART register to reset all of them
@@ -413,14 +414,18 @@ void UART_reset()
             *temp_pointer = reset_arr[j];
         }
     }
+
     //-----------------------------------------------------------------------------
-    for (i = 0; i < 15; i++)
+    for (i = 0; i < 14; i++)
     {
-        GPIODR2R_pointer = (volatile uint32_t*) (port_arr[i] + GPIODR2R);
-        *GPIODR2R_pointer = 0x000000FF;
-        GPIOSLR_pointer = (volatile uint32_t*) (port_arr[i] + GPIOSLR);
-        *GPIOSLR_pointer = 0x00000000;
+
+        //GPIODR2R_pointer = (volatile uint32_t*) (port_arr[i] + GPIODR2R);
+        //*GPIODR2R_pointer = 0x000000FF;
+        //GPIOSLR_pointer = (volatile uint32_t*) (port_arr[i] + GPIOSLR);
+        //*GPIOSLR_pointer = 0x00000000;
+
     }
+
     //-----------------------------------------------------------------------------
     // Disable all the UART bases again
     // Clearing the UART_module_bit bit and thus disabling the UART module.

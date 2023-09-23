@@ -28,7 +28,7 @@ int main(void)
 {
     char buffer[BUFF_LEN];
     // Reset UART, necessary before initializing it
-    //UART_reset();
+    UART_reset();
     // Initialize UART
     UART_init(UART_base_0);
 
@@ -36,13 +36,13 @@ int main(void)
     {
         UART_putString("Input: \n\r");
         UART_getString(buffer);
-        UART_putString("Echo: \n\r");
-        UART_putString(buffer);
-        if((buffer[0] == 'e') && (buffer[1] == 'n') && (buffer[2] == 'd'))
+        if ((buffer[0] == 'e') && (buffer[1] == 'n') && (buffer[2] == 'd'))
         {
-            //UART_reset();
+            UART_reset();
             break;
         }
+        UART_putString("Echo: \n\r");
+        UART_putString(buffer);
         UART_putString("\n\r");
     }
 }

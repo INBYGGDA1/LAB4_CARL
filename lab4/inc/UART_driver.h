@@ -29,9 +29,9 @@ extern void UART_putChar(char c);
 // This function resets the driver to a save state (reset all registers that could lead to unpredictable behavior). Initialization after r
 extern void UART_reset();
 // This function uses the putChar function to write a string.
-extern void UART_putString();
+extern void UART_putString(char *string);
 // This function uses the getChar function to read a string.
-extern void UART_getString();
+extern void UART_getString(char *buffer);
 //=============================================================================
 
 #endif // UART_DRIVER_H

@@ -11,8 +11,6 @@
 
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Includes
-#include <stdint.h>
-
 #include "../inc/UART_driver.h"
 #include "../inc/register_defines.h"
 
@@ -179,24 +177,33 @@ void UART_init(uint32_t ui32Base)
     //-----------------------------------------------------------------------------
 
     //-----------------------------------------------------------------------------
+    /* Enable UART register access */
     // Setting the UART_module_bit bit to 1 and thus enabling and providing a clock to UART module UART_module_bit in Run mode.
     *RCGCUART_pointer |= (1 << UART_module_bit);
-    // Enable port
+    // Enable port corresponding to the UART module to run
     *RCGCGPIO_pointer |= (1 << UART_port_bit);
 
+    //-----------------------------------------------------------------------------
+    /* Disable UART */
     // Clear UARTEN bit (bit 0). Disabling UART for configuration
     *UARTCTL_pointer &= ~(1 << 0);
 
+    //-----------------------------------------------------------------------------
+    /* Enable UART receive and transmit */
     // The transmit section of the UART is enabled (bit 8). The receive section of the UART is enabled (bit 9)
     *UARTCTL_pointer |= ((1 << 8) | (1 << 9));
 
-    // Mode control select register
-    *GPIOAFSEL_pointer = UART_pin;
-    // Enable the digital functions for the corresponding port. (According to lab instruction hints)
-    *GPIODEN_pointer = UART_pin;
+    //-----------------------------------------------------------------------------
+    /* Enable pins for UART */
+    // Mode control select register for the corresponding pins
+    *GPIOAFSEL_pointer |= UART_pin;
+    // Enable the digital functions for the corresponding pins. (According to lab instruction hints)
+    *GPIODEN_pointer |= UART_pin;
     // Assign the UART signals to the appropriate pins
     *GPIOPCTL_pointer |= UART_pin_bits;
 
+    //-----------------------------------------------------------------------------
+    /* Baud rate */
     // Set the integer part to 9600 baud rate
     // Default system clock runs at 16Mhz, page 1966
     // BRD = 16,000,000 / (16 * 9,600) = 104.166667
@@ -205,6 +212,8 @@ void UART_init(uint32_t ui32Base)
     // UARTFBRD[DIVFRAC] = integer(0.166667 * 64 + 0.5) = 11
     *UARTFBRD_pointer = 11;
 
+    //-----------------------------------------------------------------------------
+    /* FIFO, stop bit, parity, word length */
     // Disable FIFO
     *UARTLCRH_pointer &= ~(1 << 4);
     // One stop bit (clearing bit 3)
@@ -218,20 +227,30 @@ void UART_init(uint32_t ui32Base)
     // Use default system clock which runs at 16Mhz, page 1966
     *UARTCC_pointer &= ~(0xF);
 
+    //-----------------------------------------------------------------------------
+    /* Current and slew rate mode */
     // Do not need to enable 2-mA mode since this is default
     //*GPIODR2R_pointer |= (1 << 0);
     // Slew Rate Limit Enable (control), need not be enabled since it is not available for 2-mA mode.
     //*GPIOSLR_pointer |= (1 << 0);
 
+    //-----------------------------------------------------------------------------
+    /* Mode select */
     // Run in normal (channel?) mode
+    //
     *UARTCTL_pointer &= ~(1 << 1);
+    //
     *UARTCTL_pointer &= ~(1 << 3);
+    //
     *UARTCTL_pointer &= ~(1 << 7);
 
-
+    //-----------------------------------------------------------------------------
+    /* Enable UART */
     // Enable UARTEN bit (bit 0).
     *UARTCTL_pointer |= ((1 << 0));
 
+    //-----------------------------------------------------------------------------
+    /* Setting global variables */
     // Set a global variable to the base that is to be used, since getChar etc needs to know which base to operate from (We cannot pass it as an argument since we must follow the API given)
     g_UART_base_used = ui32Base;
     // UART has been initialized
@@ -378,13 +397,17 @@ void UART_reset()
     // Array containing every UART base
     volatile uint32_t base_arr[8] = {UART_base_0, UART_base_1, UART_base_2, UART_base_3, UART_base_4, UART_base_5, UART_base_6, UART_base_7};
     // Array containing the offset for all 30 UART registers
-    volatile uint32_t register_arr[30] = {UARTDR, UARTRSR_ECR, UARTFR, UARTILPR, UARTIBRD, UARTFBRD, UARTLCRH, UARTCTL, UARTIFLS, UARTIM,
-                               UARTRIS, UARTMIS, UARTICR, UARTDMACTL, UART9BITADDR, UART9BITAMASK, UARTPP, UARTCC, UARTPeriphID4, UARTPeriphID5,
-                               UARTPeriphID6, UARTPeriphID7, UARTPeriphID0, UARTPeriphID1, UARTPeriphID2, UARTPeriphID3, UARTPCellID0, UARTPCellID1, UARTPCellID2, UARTPCellID3};
+    volatile uint32_t register_arr[30] = {
+                               UARTDR       , UARTRSR_ECR  , UARTFR       , UARTILPR     , UARTIBRD     , UARTFBRD     , UARTLCRH    , UARTCTL     , UARTIFLS     , UARTIM       ,
+                               UARTRIS      , UARTMIS      , UARTICR      , UARTDMACTL   , UART9BITADDR , UART9BITAMASK, UARTPP      , UARTCC      , UARTPeriphID4, UARTPeriphID5,
+                               UARTPeriphID6, UARTPeriphID7, UARTPeriphID0, UARTPeriphID1, UARTPeriphID2, UARTPeriphID3, UARTPCellID0, UARTPCellID1, UARTPCellID2 , UARTPCellID3
+                               };
     // Array containing the reset vector for all 30 UART registers
-    volatile uint32_t reset_arr[30] = {0x00000000, 0x00000000, 0x00000090, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000300, 0x00000012, 0x00000000,
+    volatile uint32_t reset_arr[30] = {
+                            0x00000000, 0x00000000, 0x00000090, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000300, 0x00000012, 0x00000000,
                             0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x000000FF, 0x0000000F, 0x00000000, 0x00000060, 0x00000000,
-                            0x00000000, 0x00000000, 0x00000011, 0x00000000, 0x00000018, 0x00000001, 0x0000000D, 0x000000F0, 0x00000005, 0x000000B1};
+                            0x00000000, 0x00000000, 0x00000011, 0x00000000, 0x00000018, 0x00000001, 0x0000000D, 0x000000F0, 0x00000005, 0x000000B1
+                            };
     //-----------------------------------------------------------------------------
 
     //-----------------------------------------------------------------------------
